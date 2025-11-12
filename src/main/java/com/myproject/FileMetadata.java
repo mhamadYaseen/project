@@ -175,6 +175,16 @@ public class FileMetadata {
     }
 
     /**
+     * Returns a formatted date string.
+     * 
+     * @return Formatted date string
+     */
+    public String getFormattedDate() {
+        return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                .format(new java.util.Date(lastModified));
+    }
+
+    /**
      * Gets the filename (without directory path).
      * 
      * Example: "/Users/muhammad/report.pdf" → "report.pdf"

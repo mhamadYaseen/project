@@ -105,14 +105,14 @@ public class App {
         // Test 4: Search tests
         System.out.println("🔍 Test 4: Search by Name (keyword: 'report')");
         System.out.println("----------------------------------------");
-        List<String> nameResults = dbManager.searchByName("report");
-        nameResults.forEach(System.out::println);
+        List<FileMetadata> nameResults = dbManager.searchByName("report");
+        nameResults.forEach(f -> System.out.println(f.getPath() + " [" + f.getFormattedSize() + "]"));
         System.out.println();
 
         System.out.println("🔍 Test 5: Search by Extension (.java)");
         System.out.println("----------------------------------------");
-        List<String> extResults = dbManager.searchByExtension("java");
-        extResults.forEach(System.out::println);
+        List<FileMetadata> extResults = dbManager.searchByExtension("java");
+        extResults.forEach(f -> System.out.println(f.getPath() + " [" + f.getFormattedSize() + "]"));
         System.out.println();
 
         // Test 5: Statistics
@@ -212,19 +212,53 @@ public class App {
     }
 
     /**
-     * Handles the 'server' command - Starts TCP query server.
-     * This will be implemented in Phase 3.
+     * Handles the server command (Phase 3).
+     * 
+     * @param args Command arguments
      */
     private static void handleServer(String[] args) {
-        System.out.println("========================================");
-        System.out.println("🚀 TCP Query Server");
-        System.out.println("========================================");
-        System.out.println("⚠️  Phase 3: Coming Soon!");
-        System.out.println("This feature will be implemented in Phase 3.");
-        System.out.println("========================================\n");
-    }
+        int port = 8080; // Default port
 
-    // ========== UTILITY METHODS ==========
+        // Parse --port option
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("--port") && i + 1 < args.length) {
+                try {
+                    port = Integer.parseInt(args[i + 1]);
+                    if (port < 1024 || port > 65535) {
+                        System.err.println("❌ Port must be between 1024 and 65535");
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    System.err.println("❌ Invalid port number: " + args[i + 1]);
+                    return;
+                }
+            }
+        }
+
+        // Create database manager
+        DatabaseManager dbManager = new DatabaseManager();
+        if (!dbManager.testConnection()) {
+            System.err.println("❌ Cannot connect to database. Server not started.");
+            return;
+        }
+        System.out.println("✅ Database connection successful!\n");
+
+        // Create and start server
+        QueryServer server = new QueryServer(port, dbManager);
+
+        // Add shutdown hook for graceful shutdown
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("\n⚠️  Shutdown signal received...");
+            server.stop();
+        }));
+
+        try {
+            server.start(); // Blocks here until server stops
+        } catch (Exception e) {
+            System.err.println("❌ Server error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    } // ========== UTILITY METHODS ==========
 
     /**
      * Prints usage information for the application.

@@ -149,10 +149,10 @@ public class DatabaseManager {
      * - "/reports/summary.txt"
      * 
      * @param keyword Keyword to search for in file paths
-     * @return List of matching file paths (empty list if none found)
+     * @return List of matching FileMetadata objects (empty list if none found)
      */
-    public List<String> searchByName(String keyword) {
-        List<String> results = new ArrayList<>();
+    public List<FileMetadata> searchByName(String keyword) {
+        List<FileMetadata> results = new ArrayList<>();
 
         // SQL LIKE operator: % means "any characters"
         // Example: WHERE path LIKE '%report%' finds any path containing "report"
@@ -179,13 +179,10 @@ public class DatabaseManager {
                 long modified = rs.getLong("last_modified");
                 String ext = rs.getString("ext");
 
-                // Format the result nicely
-                String result = String.format("%s [%s, %d bytes, modified: %d]",
-                        path, ext, size, modified);
-                results.add(result);
+                // Create FileMetadata object
+                FileMetadata metadata = new FileMetadata(path, size, modified, ext != null ? ext : "");
+                results.add(metadata);
             }
-
-            System.out.println("🔍 Found " + results.size() + " files matching '" + keyword + "'");
 
         } catch (SQLException e) {
             System.err.println("❌ Error searching by name: " + e.getMessage());
@@ -201,13 +198,13 @@ public class DatabaseManager {
      * Example: searchByExtension("pdf") finds all PDF files
      * 
      * @param extension File extension to search for (e.g., "pdf", "txt")
-     * @return List of matching file paths
+     * @return List of matching FileMetadata objects
      */
-    public List<String> searchByExtension(String extension) {
-        List<String> results = new ArrayList<>();
+    public List<FileMetadata> searchByExtension(String extension) {
+        List<FileMetadata> results = new ArrayList<>();
 
         // Exact match: WHERE ext = ?
-        String sql = "SELECT path, size, last_modified FROM files WHERE ext = ?";
+        String sql = "SELECT path, size, last_modified, ext FROM files WHERE ext = ?";
 
         try (
                 Connection conn = this.connect();
@@ -220,16 +217,53 @@ public class DatabaseManager {
                 String path = rs.getString("path");
                 long size = rs.getLong("size");
                 long modified = rs.getLong("last_modified");
+                String ext = rs.getString("ext");
 
-                String result = String.format("%s [%d bytes, modified: %d]",
-                        path, size, modified);
-                results.add(result);
+                FileMetadata metadata = new FileMetadata(path, size, modified, ext != null ? ext : "");
+                results.add(metadata);
             }
-
-            System.out.println("🔍 Found " + results.size() + " ." + extension + " files");
 
         } catch (SQLException e) {
             System.err.println("❌ Error searching by extension: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+
+    /**
+     * Searches for files by size comparison.
+     * 
+     * @param size    Size threshold in bytes
+     * @param greater true for >, false for <
+     * @return List of matching FileMetadata objects
+     */
+    public List<FileMetadata> searchBySize(long size, boolean greater) {
+        List<FileMetadata> results = new ArrayList<>();
+
+        String sql = greater
+                ? "SELECT path, size, last_modified, ext FROM files WHERE size > ?"
+                : "SELECT path, size, last_modified, ext FROM files WHERE size < ?";
+
+        try (
+                Connection conn = this.connect();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setLong(1, size);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String path = rs.getString("path");
+                long fileSize = rs.getLong("size");
+                long modified = rs.getLong("last_modified");
+                String ext = rs.getString("ext");
+
+                FileMetadata metadata = new FileMetadata(path, fileSize, modified, ext != null ? ext : "");
+                results.add(metadata);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error searching by size: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -245,7 +279,7 @@ public class DatabaseManager {
      * @param maxSize Maximum file size in bytes (inclusive)
      * @return List of matching file paths
      */
-    public List<String> searchBySize(long minSize, long maxSize) {
+    public List<String> searchBySizeRange(long minSize, long maxSize) {
         List<String> results = new ArrayList<>();
 
         // Range query: WHERE size BETWEEN ? AND ?
