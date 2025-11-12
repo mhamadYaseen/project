@@ -319,9 +319,9 @@ public class DatabaseManager {
      * Returns:
      * - Total number of files
      * - Total size of all files (in bytes)
-     * - Breakdown by file type (extension)
-     * 
-     * This demonstrates SQL aggregate functions (COUNT, SUM) and GROUP BY
+     * - Average size
+     * - Max size
+     * - Number of unique extensions
      * 
      * @return Map containing statistics
      */
@@ -330,28 +330,24 @@ public class DatabaseManager {
 
         try (Connection conn = this.connect()) {
 
-            // Query 1: Get total files and total size
-            String sql1 = "SELECT COUNT(*) as total_files, SUM(size) as total_size FROM files";
-            try (PreparedStatement pstmt = conn.prepareStatement(sql1)) {
+            // Query: Get comprehensive statistics
+            String sql = "SELECT COUNT(*) as totalFiles, " +
+                        "COALESCE(SUM(size), 0) as totalSize, " +
+                        "COALESCE(AVG(size), 0) as avgSize, " +
+                        "COALESCE(MAX(size), 0) as maxSize, " +
+                        "COUNT(DISTINCT ext) as uniqueExtensions " +
+                        "FROM files";
+            
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
-                    stats.put("total_files", rs.getInt("total_files"));
-                    stats.put("total_size", rs.getLong("total_size"));
+                    stats.put("totalFiles", rs.getInt("totalFiles"));
+                    stats.put("totalSize", rs.getLong("totalSize"));
+                    stats.put("avgSize", rs.getLong("avgSize"));
+                    stats.put("maxSize", rs.getLong("maxSize"));
+                    stats.put("uniqueExtensions", rs.getInt("uniqueExtensions"));
                 }
             }
-
-            // Query 2: Get file count by extension (GROUP BY)
-            String sql2 = "SELECT ext, COUNT(*) as count FROM files GROUP BY ext ORDER BY count DESC";
-            Map<String, Integer> byExtension = new HashMap<>();
-            try (PreparedStatement pstmt = conn.prepareStatement(sql2)) {
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    String ext = rs.getString("ext");
-                    int count = rs.getInt("count");
-                    byExtension.put(ext, count);
-                }
-            }
-            stats.put("by_extension", byExtension);
 
             System.out.println("📊 Statistics retrieved successfully");
 
