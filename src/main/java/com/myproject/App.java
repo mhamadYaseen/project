@@ -116,12 +116,12 @@ public class App {
         System.out.println();
 
         // Test 5: Statistics
-        System.out.println("� Test 6: Database Statistics");
+        System.out.println("📊 Test 6: Database Statistics");
         System.out.println("----------------------------------------");
         Map<String, Object> stats = dbManager.getStats();
 
-        System.out.println("Total Files: " + stats.get("total_files"));
-        System.out.println("Total Size: " + formatBytes((Long) stats.get("total_size")));
+        System.out.println("Total Files: " + stats.get("totalFiles"));
+        System.out.println("Total Size: " + formatBytes((Long) stats.get("totalSize")));
         System.out.println("\nFiles by Extension:");
 
         @SuppressWarnings("unchecked")
@@ -193,8 +193,8 @@ public class App {
             System.out.println("📊 Database Statistics:");
             System.out.println("----------------------------------------");
             Map<String, Object> stats = dbManager.getStats();
-            System.out.println("Total Files in Database: " + stats.get("total_files"));
-            System.out.println("Total Size: " + formatBytes((Long) stats.get("total_size")));
+            System.out.println("Total Files in Database: " + stats.get("totalFiles"));
+            System.out.println("Total Size: " + formatBytes((Long) stats.get("totalSize")));
 
             System.out.println("\nTop File Types:");
             @SuppressWarnings("unchecked")

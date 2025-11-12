@@ -332,12 +332,12 @@ public class DatabaseManager {
 
             // Query: Get comprehensive statistics
             String sql = "SELECT COUNT(*) as totalFiles, " +
-                        "COALESCE(SUM(size), 0) as totalSize, " +
-                        "COALESCE(AVG(size), 0) as avgSize, " +
-                        "COALESCE(MAX(size), 0) as maxSize, " +
-                        "COUNT(DISTINCT ext) as uniqueExtensions " +
-                        "FROM files";
-            
+                    "COALESCE(SUM(size), 0) as totalSize, " +
+                    "COALESCE(AVG(size), 0) as avgSize, " +
+                    "COALESCE(MAX(size), 0) as maxSize, " +
+                    "COUNT(DISTINCT ext) as uniqueExtensions " +
+                    "FROM files";
+
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
@@ -348,6 +348,21 @@ public class DatabaseManager {
                     stats.put("uniqueExtensions", rs.getInt("uniqueExtensions"));
                 }
             }
+
+            // Query: Get file count by extension
+            String extSql = "SELECT ext, COUNT(*) as count FROM files GROUP BY ext ORDER BY count DESC";
+            Map<String, Integer> byExtension = new HashMap<>();
+
+            try (PreparedStatement pstmt = conn.prepareStatement(extSql)) {
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    String ext = rs.getString("ext");
+                    int count = rs.getInt("count");
+                    byExtension.put(ext != null ? ext : "no_extension", count);
+                }
+            }
+
+            stats.put("by_extension", byExtension);
 
             System.out.println("📊 Statistics retrieved successfully");
 
