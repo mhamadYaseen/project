@@ -3,11 +3,13 @@
 ## Quick Reference Card
 
 ### JDBC Connection
+
 ```java
 Connection conn = DriverManager.getConnection(url, username, password);
 ```
 
 ### PreparedStatement (Safe)
+
 ```java
 String sql = "INSERT INTO table VALUES(?, ?)";
 PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -16,6 +18,7 @@ pstmt.executeUpdate();
 ```
 
 ### Try-with-Resources
+
 ```java
 try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
     // Use resources
@@ -23,6 +26,7 @@ try (Connection conn = getConnection(); PreparedStatement pstmt = conn.prepareSt
 ```
 
 ### ResultSet
+
 ```java
 ResultSet rs = pstmt.executeQuery();
 while (rs.next()) {
@@ -35,32 +39,38 @@ while (rs.next()) {
 ## Common SQL Patterns
 
 ### INSERT
+
 ```sql
 INSERT INTO files(path, size, last_modified, ext) VALUES(?, ?, ?, ?)
 ```
 
 ### SELECT with LIKE
+
 ```sql
 SELECT * FROM files WHERE path LIKE ?
 -- Use: pstmt.setString(1, "%" + keyword + "%");
 ```
 
 ### SELECT with exact match
+
 ```sql
 SELECT * FROM files WHERE ext = ?
 ```
 
 ### SELECT with range
+
 ```sql
 SELECT * FROM files WHERE size BETWEEN ? AND ?
 ```
 
 ### COUNT
+
 ```sql
 SELECT COUNT(*) as total FROM files
 ```
 
 ### GROUP BY
+
 ```sql
 SELECT ext, COUNT(*) as count FROM files GROUP BY ext
 ```
@@ -69,15 +79,15 @@ SELECT ext, COUNT(*) as count FROM files GROUP BY ext
 
 ## Java-SQL Type Mapping
 
-| Java Type | SQL Type | Set Method | Get Method |
-|-----------|----------|------------|------------|
-| int | INT | setInt() | getInt() |
-| long | BIGINT | setLong() | getLong() |
-| String | TEXT/VARCHAR | setString() | getString() |
-| double | DOUBLE | setDouble() | getDouble() |
-| boolean | BOOLEAN | setBoolean() | getBoolean() |
-| Date | DATE | setDate() | getDate() |
-| Timestamp | TIMESTAMP | setTimestamp() | getTimestamp() |
+| Java Type | SQL Type     | Set Method     | Get Method     |
+| --------- | ------------ | -------------- | -------------- |
+| int       | INT          | setInt()       | getInt()       |
+| long      | BIGINT       | setLong()      | getLong()      |
+| String    | TEXT/VARCHAR | setString()    | getString()    |
+| double    | DOUBLE       | setDouble()    | getDouble()    |
+| boolean   | BOOLEAN      | setBoolean()   | getBoolean()   |
+| Date      | DATE         | setDate()      | getDate()      |
+| Timestamp | TIMESTAMP    | setTimestamp() | getTimestamp() |
 
 ---
 
@@ -113,22 +123,26 @@ try (Connection conn = connect()) {
 ## Debugging Tips
 
 ### Check Connection
+
 ```java
 System.out.println("Connected to: " + conn.getCatalog());
 ```
 
 ### Print SQL Query
+
 ```java
 System.out.println("Executing: " + pstmt.toString());
 ```
 
 ### Check Rows Affected
+
 ```java
 int rows = pstmt.executeUpdate();
 System.out.println("Rows affected: " + rows);
 ```
 
 ### Inspect SQLException
+
 ```java
 catch (SQLException e) {
     System.err.println("SQL State: " + e.getSQLState());

@@ -9,14 +9,17 @@ A JDBC driver is a **software component** that enables Java applications to inte
 **The Four Types of JDBC Drivers:**
 
 1. **Type 1: JDBC-ODBC Bridge** (Deprecated)
+
    - Uses ODBC driver
    - Not used anymore
 
 2. **Type 2: Native-API Driver**
+
    - Uses database-specific native libraries
    - Platform-dependent
 
 3. **Type 3: Network Protocol Driver**
+
    - Uses middleware server
    - Rarely used
 
@@ -32,7 +35,7 @@ A JDBC driver is a **software component** that enables Java applications to inte
 Class.forName("com.mysql.cj.jdbc.Driver");
 ```
 
-This line **loads the driver class** into memory. 
+This line **loads the driver class** into memory.
 
 **Note:** In modern JDBC (4.0+), this is actually **optional** because drivers are auto-discovered using the Service Provider Interface (SPI). But it's good practice to include it for clarity and compatibility.
 
@@ -43,11 +46,13 @@ This line **loads the driver class** into memory.
 ### Why Connection Pooling?
 
 Creating a database connection is **expensive**:
+
 - Takes time (100-200ms)
 - Uses system resources
 - Network overhead
 
 **Problem:**
+
 ```java
 // This is inefficient for many operations
 for (int i = 0; i < 1000; i++) {
@@ -79,6 +84,7 @@ Instead of creating new connections each time, maintain a **pool** of reusable c
 **For Phase 2+:** We'll implement a connection pool (needed for concurrent operations)
 
 **Popular pooling libraries:**
+
 - HikariCP (fastest)
 - Apache DBCP
 - C3P0
@@ -94,6 +100,7 @@ SQL Injection is when an attacker **manipulates your SQL query** by inserting ma
 ### Example Attack
 
 **Vulnerable Code:**
+
 ```java
 String userInput = request.getParameter("fileName");
 String sql = "SELECT * FROM files WHERE path = '" + userInput + "'";
@@ -102,6 +109,7 @@ ResultSet rs = stmt.executeQuery(sql);
 ```
 
 **Normal Input:**
+
 ```
 userInput = "report.pdf"
 SQL becomes: SELECT * FROM files WHERE path = 'report.pdf'
@@ -109,6 +117,7 @@ SQL becomes: SELECT * FROM files WHERE path = 'report.pdf'
 ```
 
 **Malicious Input:**
+
 ```
 userInput = "' OR '1'='1"
 SQL becomes: SELECT * FROM files WHERE path = '' OR '1'='1'
@@ -116,6 +125,7 @@ SQL becomes: SELECT * FROM files WHERE path = '' OR '1'='1'
 ```
 
 **Even Worse:**
+
 ```
 userInput = "'; DROP TABLE files; --"
 SQL becomes: SELECT * FROM files WHERE path = ''; DROP TABLE files; --'
@@ -132,6 +142,7 @@ ResultSet rs = pstmt.executeQuery();
 ```
 
 **How it protects you:**
+
 1. SQL query structure is **fixed** (the `?` placeholders are defined)
 2. User input is treated as **data**, not **code**
 3. Special characters are automatically escaped
@@ -149,6 +160,7 @@ A **transaction** is a group of SQL operations that must **all succeed or all fa
 
 **Example Scenario:**
 You need to:
+
 1. Delete old file record
 2. Insert new file record
 3. Update statistics table
@@ -161,26 +173,26 @@ You need to:
 Connection conn = null;
 try {
     conn = DriverManager.getConnection(...);
-    
+
     conn.setAutoCommit(false); // Start transaction
-    
+
     // Operation 1
     PreparedStatement pstmt1 = conn.prepareStatement("DELETE FROM files WHERE id = ?");
     pstmt1.setInt(1, oldId);
     pstmt1.executeUpdate();
-    
+
     // Operation 2
     PreparedStatement pstmt2 = conn.prepareStatement("INSERT INTO files...");
     // ... set parameters
     pstmt2.executeUpdate();
-    
+
     // Operation 3
     PreparedStatement pstmt3 = conn.prepareStatement("UPDATE stats...");
     // ... set parameters
     pstmt3.executeUpdate();
-    
+
     conn.commit(); // ✅ All succeeded, save changes
-    
+
 } catch (SQLException e) {
     if (conn != null) {
         conn.rollback(); // ❌ Something failed, undo everything
@@ -194,6 +206,7 @@ try {
 ```
 
 **ACID Properties:**
+
 - **A**tomicity: All or nothing
 - **C**onsistency: Database remains valid
 - **I**solation: Transactions don't interfere with each other
@@ -209,6 +222,7 @@ try {
 ### Why Batch Operations?
 
 **Slow way:**
+
 ```java
 for (int i = 0; i < 1000; i++) {
     String sql = "INSERT INTO files VALUES(?, ?, ?, ?)";
@@ -221,6 +235,7 @@ for (int i = 0; i < 1000; i++) {
 ```
 
 **Fast way (batching):**
+
 ```java
 String sql = "INSERT INTO files VALUES(?, ?, ?, ?)";
 PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -230,7 +245,7 @@ for (int i = 0; i < 1000; i++) {
     pstmt.setLong(2, size);
     // ...
     pstmt.addBatch(); // Add to batch, don't execute yet
-    
+
     if (i % 100 == 0) {
         pstmt.executeBatch(); // Execute 100 at once
         pstmt.clearBatch();
@@ -276,6 +291,7 @@ rs.absolute(5); // Jump to row 5
 ```
 
 **Types:**
+
 - `TYPE_FORWARD_ONLY` - Default, fastest
 - `TYPE_SCROLL_INSENSITIVE` - Can scroll, but doesn't see DB changes
 - `TYPE_SCROLL_SENSITIVE` - Can scroll, sees DB changes (rarely supported)
@@ -317,6 +333,7 @@ for (int i = 1; i <= columnCount; i++) {
 ```
 
 **Use cases:**
+
 - Dynamic query builders
 - Generic database utilities
 - Debugging
@@ -338,6 +355,7 @@ String url = "jdbc:mysql://localhost:3306/file_indexer"
 ```
 
 **Common Parameters:**
+
 - `useSSL` - Enable/disable SSL encryption
 - `serverTimezone` - Handle timezone differences
 - `autoReconnect` - Reconnect if connection drops
@@ -356,11 +374,11 @@ SQL `NULL` is special - it means "no value" or "unknown".
 ResultSet rs = pstmt.executeQuery();
 while (rs.next()) {
     String ext = rs.getString("ext");
-    
+
     if (ext == null) {
         System.out.println("File has no extension");
     }
-    
+
     // Or check with wasNull()
     int size = rs.getInt("size");
     if (rs.wasNull()) {
@@ -370,6 +388,7 @@ while (rs.next()) {
 ```
 
 **Inserting NULL:**
+
 ```java
 pstmt.setString(1, path);
 pstmt.setNull(2, java.sql.Types.VARCHAR); // Explicitly set NULL
@@ -387,14 +406,14 @@ try {
 } catch (SQLException e) {
     int errorCode = e.getErrorCode();
     String sqlState = e.getSQLState();
-    
+
     // MySQL-specific error codes
     if (errorCode == 1062) {
         System.out.println("Duplicate key error");
     } else if (errorCode == 1146) {
         System.out.println("Table doesn't exist");
     }
-    
+
     System.out.println("SQL State: " + sqlState);
     System.out.println("Error Code: " + errorCode);
     System.out.println("Message: " + e.getMessage());
@@ -402,6 +421,7 @@ try {
 ```
 
 **Common MySQL Error Codes:**
+
 - 1062: Duplicate entry
 - 1146: Table doesn't exist
 - 1452: Foreign key constraint fails

@@ -3,12 +3,14 @@
 ## Before Running the Code
 
 ### 1. Make Sure XAMPP is Running
+
 - [ ] Open XAMPP Control Panel
 - [ ] Start **Apache** module
 - [ ] Start **MySQL** module
 - [ ] Both should show "Running" status
 
 ### 2. Verify Database Setup
+
 - [ ] Open browser and go to: `http://localhost/phpmyadmin/`
 - [ ] Check that `file_indexer` database exists in the left sidebar
 - [ ] Click on `file_indexer` database
@@ -136,11 +138,13 @@ Files by Extension:
 ### ❌ "Cannot connect to database"
 
 **Possible Causes:**
+
 1. MySQL is not running in XAMPP
 2. Database `file_indexer` doesn't exist
 3. Wrong password (should be empty for XAMPP default)
 
 **Solution:**
+
 - Start MySQL in XAMPP
 - Create the database in phpMyAdmin
 - Check DatabaseManager.java for correct credentials
@@ -149,6 +153,7 @@ Files by Extension:
 
 **Solution:**
 Run this SQL in phpMyAdmin:
+
 ```sql
 CREATE TABLE files (
   id INT PRIMARY KEY AUTO_INCREMENT,
@@ -162,14 +167,17 @@ CREATE TABLE files (
 ### ❌ "MySQL JDBC Driver not found"
 
 **Solution:**
+
 ```bash
 mvn clean install
 ```
+
 This downloads the MySQL connector dependency.
 
 ### ❌ "Could not find or load main class"
 
 **Solution:**
+
 ```bash
 mvn clean compile
 mvn exec:java -Dexec.mainClass="com.myproject.App"
@@ -181,15 +189,18 @@ mvn exec:java -Dexec.mainClass="com.myproject.App"
 
 ### Read These Files in Order:
 
-1. **`docs/PHASE1_GUIDE.md`** 
+1. **`docs/PHASE1_GUIDE.md`**
+
    - Start here! High-level overview of all concepts
    - Explains JDBC, connections, PreparedStatement, etc.
 
 2. **`docs/PHASE1_CONCEPTS.md`**
+
    - Deep dive into advanced concepts
    - SQL injection, transactions, batch operations, etc.
 
 3. **`src/main/java/com/myproject/DatabaseManager.java`**
+
    - Implementation with extensive comments
    - Read each method carefully
    - Understand the try-with-resources pattern
@@ -205,41 +216,48 @@ mvn exec:java -Dexec.mainClass="com.myproject.App"
 After completing Phase 1, you now understand:
 
 ✅ **JDBC Basics**
-   - How to connect to MySQL from Java
-   - JDBC URL format and connection parameters
-   - Loading JDBC drivers
+
+- How to connect to MySQL from Java
+- JDBC URL format and connection parameters
+- Loading JDBC drivers
 
 ✅ **Connection Management**
-   - Creating and closing connections
-   - Try-with-resources for automatic cleanup
-   - Why connections are expensive
+
+- Creating and closing connections
+- Try-with-resources for automatic cleanup
+- Why connections are expensive
 
 ✅ **PreparedStatement**
-   - Why it's safer than Statement
-   - How to use placeholders (?)
-   - Preventing SQL injection attacks
+
+- Why it's safer than Statement
+- How to use placeholders (?)
+- Preventing SQL injection attacks
 
 ✅ **CRUD Operations**
-   - **C**reate: INSERT INTO
-   - **R**ead: SELECT with various conditions
-   - **D**elete: DELETE FROM
-   - (Update will come later)
+
+- **C**reate: INSERT INTO
+- **R**ead: SELECT with various conditions
+- **D**elete: DELETE FROM
+- (Update will come later)
 
 ✅ **ResultSet**
-   - Iterating through query results
-   - Getting values by column name
-   - Understanding the cursor model
+
+- Iterating through query results
+- Getting values by column name
+- Understanding the cursor model
 
 ✅ **SQL Queries**
-   - LIKE operator for pattern matching
-   - BETWEEN for range queries
-   - COUNT and SUM for aggregates
-   - GROUP BY for categorization
+
+- LIKE operator for pattern matching
+- BETWEEN for range queries
+- COUNT and SUM for aggregates
+- GROUP BY for categorization
 
 ✅ **Exception Handling**
-   - Catching SQLException
-   - Proper error messages
-   - Graceful failure
+
+- Catching SQLException
+- Proper error messages
+- Graceful failure
 
 ---
 
@@ -248,10 +266,13 @@ After completing Phase 1, you now understand:
 Want to learn more? Try these exercises:
 
 ### Exercise 1: Add More Files
+
 Modify `App.java` to add 10 different files of your choice.
 
 ### Exercise 2: Update Operation
+
 Add an `updateFileSize()` method to DatabaseManager:
+
 ```java
 public boolean updateFileSize(int id, long newSize) {
     // Your implementation here
@@ -259,7 +280,9 @@ public boolean updateFileSize(int id, long newSize) {
 ```
 
 ### Exercise 3: Complex Queries
+
 Add a method to find files modified in the last N days:
+
 ```java
 public List<String> searchRecentFiles(int days) {
     // Hint: Compare last_modified with System.currentTimeMillis() - (days * 86400000)
@@ -267,7 +290,9 @@ public List<String> searchRecentFiles(int days) {
 ```
 
 ### Exercise 4: Count by Extension
+
 Add a method to count how many files have a specific extension:
+
 ```java
 public int countByExtension(String ext) {
     // Use SELECT COUNT(*) WHERE ext = ?
@@ -275,7 +300,9 @@ public int countByExtension(String ext) {
 ```
 
 ### Exercise 5: Delete by Extension
+
 Add a method to delete all files with a certain extension:
+
 ```java
 public int deleteByExtension(String ext) {
     // Returns number of files deleted
@@ -289,6 +316,7 @@ public int deleteByExtension(String ext) {
 Once you're comfortable with Phase 1, you're ready for **Phase 2: File Scanner**
 
 Phase 2 will cover:
+
 - Recursive directory traversal
 - Java File I/O (`java.nio.file`)
 - Multithreading with ExecutorService
@@ -304,6 +332,7 @@ Phase 2 will cover:
 You've completed Phase 1! You now have a solid foundation in JDBC and database operations.
 
 **Phase 1 Completion Criteria:**
+
 - ✅ Can connect to MySQL from Java
 - ✅ Can insert file records
 - ✅ Can search files by name, extension, and size

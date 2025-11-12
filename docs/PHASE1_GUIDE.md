@@ -26,6 +26,7 @@ Think of JDBC as a **translator** between your Java program and any database (My
 ```
 
 **How it works:**
+
 1. You write Java code using JDBC API
 2. JDBC Driver translates it to database-specific commands
 3. Database executes the command
@@ -46,13 +47,6 @@ Let's break this down:
 - `3306` - Port number (MySQL's default port)
 - `file_indexer` - Database name (the one we created)
 
-**Real-world analogy:** It's like a mailing address:
-- Protocol = Mail Service (USPS, FedEx)
-- localhost = Street
-- 3306 = Building Number
-- file_indexer = Apartment Number
-
----
 
 ### 3. Connection - The Bridge to Database
 
@@ -61,11 +55,13 @@ Connection conn = DriverManager.getConnection(url, username, password);
 ```
 
 **What is a Connection?**
+
 - A "phone line" between your Java app and MySQL
 - Allows you to send SQL commands and receive results
 - Must be **opened** before use and **closed** after use
 
 **Important Rules:**
+
 1. ✅ Always close connections when done (or use try-with-resources)
 2. ❌ Don't create too many connections (expensive operation)
 3. ✅ Reuse connections when possible (later we'll use connection pooling)
@@ -75,6 +71,7 @@ Connection conn = DriverManager.getConnection(url, username, password);
 ### 4. PreparedStatement - Safe SQL Execution
 
 **Bad way (vulnerable to SQL injection):**
+
 ```java
 String sql = "INSERT INTO files VALUES('" + path + "')"; // DANGEROUS!
 Statement stmt = conn.createStatement();
@@ -82,6 +79,7 @@ stmt.execute(sql);
 ```
 
 **Good way (safe):**
+
 ```java
 String sql = "INSERT INTO files(path, size) VALUES(?, ?)";
 PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -91,11 +89,13 @@ pstmt.executeUpdate();
 ```
 
 **Why PreparedStatement?**
+
 1. **Security:** Prevents SQL injection attacks
 2. **Performance:** Database can optimize the query
 3. **Readability:** Clean separation of SQL and data
 
 **The `?` placeholders:**
+
 - Each `?` is a placeholder for a value
 - You fill them in order using `setString()`, `setInt()`, `setLong()`, etc.
 - Index starts at **1** (not 0!)
@@ -105,6 +105,7 @@ pstmt.executeUpdate();
 ### 5. Try-with-Resources - Automatic Cleanup
 
 **Old way (manual cleanup):**
+
 ```java
 Connection conn = null;
 PreparedStatement pstmt = null;
@@ -121,6 +122,7 @@ try {
 ```
 
 **New way (automatic):**
+
 ```java
 try (
     Connection conn = DriverManager.getConnection(url, user, pass);
@@ -134,6 +136,7 @@ try (
 ```
 
 **How it works:**
+
 - Resources declared in `try(...)` are **AutoCloseable**
 - Java automatically calls `.close()` when the try block ends
 - Even if an exception occurs, resources are still closed
@@ -145,14 +148,15 @@ try (
 
 When working with databases, you need to match types correctly:
 
-| SQL Type | Java Type | JDBC Method | Example |
-|----------|-----------|-------------|---------|
-| INT | int | `setInt()` / `getInt()` | File ID |
-| BIGINT | long | `setLong()` / `getLong()` | File size, timestamp |
-| TEXT | String | `setString()` / `getString()` | File path |
-| VARCHAR | String | `setString()` / `getString()` | Extension |
+| SQL Type | Java Type | JDBC Method                   | Example              |
+| -------- | --------- | ----------------------------- | -------------------- |
+| INT      | int       | `setInt()` / `getInt()`       | File ID              |
+| BIGINT   | long      | `setLong()` / `getLong()`     | File size, timestamp |
+| TEXT     | String    | `setString()` / `getString()` | File path            |
+| VARCHAR  | String    | `setString()` / `getString()` | Extension            |
 
 **Why BIGINT for size and last_modified?**
+
 - File sizes can exceed 2GB (INT max = 2,147,483,647 bytes ≈ 2GB)
 - Timestamps in Java are milliseconds since 1970 (very large numbers)
 - BIGINT can hold values up to 9,223,372,036,854,775,807 (Java `long`)
@@ -166,17 +170,20 @@ When working with databases, you need to match types correctly:
 Every database application needs these four operations:
 
 1. **Create (INSERT)** - Add new records
+
    ```sql
    INSERT INTO files(path, size, last_modified, ext) VALUES(?, ?, ?, ?)
    ```
 
 2. **Read (SELECT)** - Query/search records
+
    ```sql
    SELECT * FROM files WHERE ext = ?
    SELECT * FROM files WHERE path LIKE ?
    ```
 
 3. **Update** - Modify existing records
+
    ```sql
    UPDATE files SET size = ? WHERE path = ?
    ```
@@ -196,20 +203,21 @@ When you run a SELECT query, you get a **ResultSet**:
 String sql = "SELECT * FROM files WHERE ext = ?";
 try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
     pstmt.setString(1, "pdf");
-    
+
     ResultSet rs = pstmt.executeQuery(); // Get results
-    
+
     while (rs.next()) { // Loop through each row
         int id = rs.getInt("id");
         String path = rs.getString("path");
         long size = rs.getLong("size");
-        
+
         System.out.println("File: " + path + ", Size: " + size);
     }
 }
 ```
 
 **How ResultSet works:**
+
 - It's like a **cursor** pointing to rows in the result
 - `rs.next()` moves to the next row (returns `false` when no more rows)
 - `rs.getString("column_name")` gets the value from that column
@@ -220,6 +228,7 @@ try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
 ### 9. executeUpdate() vs executeQuery()
 
 **Use `executeUpdate()` for:**
+
 - INSERT
 - UPDATE
 - DELETE
@@ -230,6 +239,7 @@ int rowsAffected = pstmt.executeUpdate();
 ```
 
 **Use `executeQuery()` for:**
+
 - SELECT
 - Returns: ResultSet with the query results
 
@@ -242,6 +252,7 @@ ResultSet rs = pstmt.executeQuery();
 ### 10. Exception Handling - SQLException
 
 Database operations can fail for many reasons:
+
 - Database server is down
 - Invalid SQL syntax
 - Connection timeout
@@ -249,6 +260,7 @@ Database operations can fail for many reasons:
 - Duplicate key violation
 
 **Always catch SQLException:**
+
 ```java
 try {
     // Database operations
@@ -259,6 +271,7 @@ try {
 ```
 
 **Common SQLExceptions:**
+
 - `Communications link failure` - Can't reach database server
 - `Access denied` - Wrong username/password
 - `Unknown database` - Database doesn't exist
@@ -326,6 +339,7 @@ After Phase 1, you'll understand:
 Now let's implement the `DatabaseManager` class!
 
 Check out:
+
 - `DatabaseManager.java` - The implementation with detailed comments
 - `App.java` - Test program to verify everything works
 - `PHASE1_CONCEPTS.md` - Deep dive into each concept (next file)
