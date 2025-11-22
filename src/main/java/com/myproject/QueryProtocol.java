@@ -3,50 +3,20 @@ package com.myproject;
 import java.util.List;
 import java.util.Map;
 
-/**
- * QueryProtocol - Parses and executes client commands.
- * 
- * Phase 3: Command protocol implementation
- * 
- * Supported Commands:
- * - FIND name contains <keyword> - Search by filename
- * - FIND ext is <extension> - Search by file extension
- * - FIND size > <bytes> - Search by minimum size
- * - FIND size < <bytes> - Search by maximum size
- * - STATS - Get database statistics
- * - HELP - Show help message
- * - QUIT - Disconnect
- * 
- * @author Muhammad
- * @version 1.0 - Phase 3
- */
 public class QueryProtocol {
 
     private final DatabaseManager dbManager;
-    private static final int MAX_RESULTS = 100; // Limit results to prevent overwhelming client
+    private static final int MAX_RESULTS = 100;
 
-    /**
-     * Creates a new QueryProtocol.
-     * 
-     * @param dbManager Database manager for executing queries
-     */
     public QueryProtocol(DatabaseManager dbManager) {
         this.dbManager = dbManager;
     }
 
-    /**
-     * Processes a command and returns the response.
-     * 
-     * @param command Command string from client
-     * @return Response string to send back
-     */
     public String processCommand(String command) {
         try {
-            // Normalize command
             command = command.trim();
             String upperCommand = command.toUpperCase();
 
-            // Route to appropriate handler
             if (upperCommand.equals("HELP")) {
                 return getHelpMessage();
             } else if (upperCommand.equals("STATS")) {
@@ -62,15 +32,8 @@ public class QueryProtocol {
         }
     }
 
-    /**
-     * Handles FIND commands.
-     * 
-     * @param command Full FIND command
-     * @return Search results
-     */
     private String handleFind(String command) {
-        // Parse command: FIND <field> <operator> <value>
-        String[] parts = command.split("\\s+", 4); // Split into max 4 parts
+        String[] parts = command.split("\\s+", 4);
 
         if (parts.length < 4) {
             return "❌ Invalid FIND syntax.\nUsage: FIND <field> <operator> <value>\n" +
@@ -81,7 +44,6 @@ public class QueryProtocol {
         String operator = parts[2].toLowerCase();
         String value = parts[3];
 
-        // Route to specific search method
         switch (field) {
             case "name":
                 if (operator.equals("contains")) {
@@ -110,25 +72,12 @@ public class QueryProtocol {
         }
     }
 
-    /**
-     * Searches files by name.
-     * 
-     * @param keyword Keyword to search for
-     * @return Formatted results
-     */
     private String searchByName(String keyword) {
         List<FileMetadata> results = dbManager.searchByName(keyword);
         return formatResults(results, "Files containing '" + keyword + "' in name");
     }
 
-    /**
-     * Searches files by extension.
-     * 
-     * @param extension File extension (e.g., "pdf", "jpg")
-     * @return Formatted results
-     */
     private String searchByExtension(String extension) {
-        // Remove leading dot if present
         if (extension.startsWith(".")) {
             extension = extension.substring(1);
         }
@@ -137,13 +86,6 @@ public class QueryProtocol {
         return formatResults(results, "Files with extension '" + extension + "'");
     }
 
-    /**
-     * Searches files by size.
-     * 
-     * @param operator ">" or "<"
-     * @param sizeStr  Size in bytes
-     * @return Formatted results
-     */
     private String searchBySize(String operator, String sizeStr) {
         try {
             long size = Long.parseLong(sizeStr);
@@ -157,11 +99,6 @@ public class QueryProtocol {
         }
     }
 
-    /**
-     * Handles STATS command.
-     * 
-     * @return Database statistics
-     */
     private String handleStats() {
         Map<String, Object> stats = dbManager.getStats();
 
@@ -179,13 +116,6 @@ public class QueryProtocol {
         return sb.toString();
     }
 
-    /**
-     * Formats search results into a readable string.
-     * 
-     * @param results List of file metadata
-     * @param title   Title for the results
-     * @return Formatted string
-     */
     private String formatResults(List<FileMetadata> results, String title) {
         if (results.isEmpty()) {
             return "📭 No files found matching your criteria.";
@@ -203,7 +133,6 @@ public class QueryProtocol {
 
         sb.append("\n========================================\n");
 
-        // Display results (limit to MAX_RESULTS)
         int count = 0;
         for (FileMetadata file : results) {
             if (count >= MAX_RESULTS) {
@@ -221,11 +150,6 @@ public class QueryProtocol {
         return sb.toString();
     }
 
-    /**
-     * Returns the help message.
-     * 
-     * @return Help text
-     */
     private String getHelpMessage() {
         return "\n========================================\n" +
                 "📖 Available Commands\n" +
@@ -247,12 +171,6 @@ public class QueryProtocol {
                 "========================================";
     }
 
-    /**
-     * Formats bytes into human-readable format.
-     * 
-     * @param bytes Number of bytes
-     * @return Formatted string
-     */
     private String formatBytes(long bytes) {
         if (bytes < 1024)
             return bytes + " B";

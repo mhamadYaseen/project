@@ -4,33 +4,16 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Main Application - File Indexer Command-Line Interface
- * 
- * This is the entry point for the File Indexer application.
- * It supports multiple commands via command-line arguments.
- * 
- * Commands:
- * - test: Test Phase 1 database operations
- * - scan <directory>: Scan and index files (Phase 2)
- * - server: Start TCP query server (Phase 3)
- * 
- * @author Muhammad
- * @version 2.0 - Phase 2: File Scanner
- */
 public class App {
 
     public static void main(String[] args) {
-        // Check if any arguments provided
         if (args.length == 0) {
             printUsage();
             return;
         }
 
-        // Get the command
         String command = args[0].toLowerCase();
 
-        // Route to appropriate handler
         switch (command) {
             case "test":
                 handleTest();
@@ -56,11 +39,6 @@ public class App {
         }
     }
 
-    // ========== COMMAND HANDLERS ==========
-
-    /**
-     * Handles the 'test' command - Tests Phase 1 database operations.
-     */
     private static void handleTest() {
         System.out.println("========================================");
         System.out.println("📁 File Indexer - Phase 1 Testing");
@@ -68,7 +46,6 @@ public class App {
 
         DatabaseManager dbManager = new DatabaseManager();
 
-        // Test 1: Database Connection
         System.out.println("🔌 Test 1: Database Connection");
         System.out.println("----------------------------------------");
         if (!dbManager.testConnection()) {
@@ -77,13 +54,11 @@ public class App {
         }
         System.out.println();
 
-        // Test 2: Clear old data
         System.out.println("🗑️  Test 2: Clear Old Data");
         System.out.println("----------------------------------------");
         dbManager.clearDatabase();
         System.out.println();
 
-        // Test 3: Add sample files
         System.out.println("➕ Test 3: Adding Sample Files");
         System.out.println("----------------------------------------");
 
@@ -102,7 +77,6 @@ public class App {
 
         System.out.println();
 
-        // Test 4: Search tests
         System.out.println("🔍 Test 4: Search by Name (keyword: 'report')");
         System.out.println("----------------------------------------");
         List<FileMetadata> nameResults = dbManager.searchByName("report");
@@ -115,7 +89,6 @@ public class App {
         extResults.forEach(f -> System.out.println(f.getPath() + " [" + f.getFormattedSize() + "]"));
         System.out.println();
 
-        // Test 5: Statistics
         System.out.println("📊 Test 6: Database Statistics");
         System.out.println("----------------------------------------");
         Map<String, Object> stats = dbManager.getStats();
@@ -137,13 +110,7 @@ public class App {
         System.out.println("   Navigate to: file_indexer > files table\n");
     }
 
-    /**
-     * Handles the 'scan' command - Scans a directory and indexes files.
-     * 
-     * Usage: java -jar FileIndexer.jar scan <directory> [--threads N]
-     */
     private static void handleScan(String[] args) {
-        // Check if directory path provided
         if (args.length < 2) {
             System.err.println("❌ Error: Directory path required");
             System.err.println("Usage: java -jar FileIndexer.jar scan <directory> [--threads N]");
@@ -152,9 +119,8 @@ public class App {
         }
 
         String directoryPath = args[1];
-        int threadCount = 4; // Default
+        int threadCount = 4;
 
-        // Parse optional --threads argument
         for (int i = 2; i < args.length; i++) {
             if (args[i].equals("--threads") && i + 1 < args.length) {
                 try {
@@ -170,10 +136,8 @@ public class App {
             }
         }
 
-        // Create scanner and database manager
         DatabaseManager dbManager = new DatabaseManager();
 
-        // Test database connection first
         if (!dbManager.testConnection()) {
             System.err.println("❌ Cannot connect to database!");
             System.err.println("Make sure XAMPP MySQL is running and database 'file_indexer' exists.");
@@ -183,13 +147,10 @@ public class App {
         FileScanner scanner = new FileScanner(dbManager, threadCount);
 
         try {
-            // Perform the scan
             FileScanner.ScanResult result = scanner.scan(directoryPath);
 
-            // Print summary
             result.printSummary();
 
-            // Show database statistics
             System.out.println("📊 Database Statistics:");
             System.out.println("----------------------------------------");
             Map<String, Object> stats = dbManager.getStats();
@@ -211,15 +172,9 @@ public class App {
         }
     }
 
-    /**
-     * Handles the server command (Phase 3).
-     * 
-     * @param args Command arguments
-     */
     private static void handleServer(String[] args) {
-        int port = 8080; // Default port
+        int port = 8080;
 
-        // Parse --port option
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--port") && i + 1 < args.length) {
                 try {
@@ -235,7 +190,6 @@ public class App {
             }
         }
 
-        // Create database manager
         DatabaseManager dbManager = new DatabaseManager();
         if (!dbManager.testConnection()) {
             System.err.println("❌ Cannot connect to database. Server not started.");
@@ -243,26 +197,21 @@ public class App {
         }
         System.out.println("✅ Database connection successful!\n");
 
-        // Create and start server
         QueryServer server = new QueryServer(port, dbManager);
 
-        // Add shutdown hook for graceful shutdown
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("\n⚠️  Shutdown signal received...");
             server.stop();
         }));
 
         try {
-            server.start(); // Blocks here until server stops
+            server.start();
         } catch (Exception e) {
             System.err.println("❌ Server error: " + e.getMessage());
             e.printStackTrace();
         }
-    } // ========== UTILITY METHODS ==========
+    }
 
-    /**
-     * Prints usage information for the application.
-     */
     private static void printUsage() {
         System.out.println("\n========================================");
         System.out.println("📁 File Indexer - Usage");
@@ -298,9 +247,6 @@ public class App {
         System.out.println("========================================\n");
     }
 
-    /**
-     * Formats bytes into human-readable format.
-     */
     private static String formatBytes(long bytes) {
         if (bytes < 1024)
             return bytes + " B";
