@@ -431,6 +431,28 @@ public class DatabaseManager {
         return 0;
     }
 
+    /**
+     * Clears all files from the database.
+     * Uses TRUNCATE for better performance on large tables.
+     * 
+     * @return true if successful, false otherwise
+     */
+    public boolean clearAllFiles() {
+        String sql = "TRUNCATE TABLE files";
+
+        try (
+                Connection conn = this.connect();
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.executeUpdate();
+            return true;
+
+        } catch (SQLException e) {
+            System.err.println("❌ Error clearing database: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     // ========== BATCH OPERATIONS (Phase 2) ==========
 
     /**

@@ -44,6 +44,10 @@ public class App {
                 handleServer(args);
                 break;
 
+            case "clean":
+                handleClean();
+                break;
+
             case "help":
             case "--help":
             case "-h":
@@ -258,7 +262,51 @@ public class App {
             System.err.println("❌ Server error: " + e.getMessage());
             e.printStackTrace();
         }
-    } // ========== UTILITY METHODS ==========
+    }
+
+    /**
+     * Handles the clean command - clears all files from database.
+     */
+    private static void handleClean() {
+        DatabaseManager dbManager = new DatabaseManager();
+
+        // Test database connection first
+        if (!dbManager.testConnection()) {
+            System.err.println("❌ Cannot connect to database");
+            return;
+        }
+
+        System.out.println("\n========================================");
+        System.out.println("🗑️  Database Cleanup");
+        System.out.println("========================================\n");
+
+        // Get current stats before cleaning
+        Map<String, Object> statsBefore = dbManager.getStats();
+        int filesBefore = (Integer) statsBefore.get("totalFiles");
+
+        if (filesBefore == 0) {
+            System.out.println("📭 Database is already empty!");
+            System.out.println("========================================\n");
+            return;
+        }
+
+        System.out.println("⚠️  Warning: This will delete ALL " + filesBefore + " files from the database!");
+        System.out.println("This action cannot be undone.\n");
+
+        // Clear the database
+        boolean success = dbManager.clearAllFiles();
+
+        if (success) {
+            System.out.println("✅ Database cleaned successfully!");
+            System.out.println("📊 " + filesBefore + " file records removed");
+        } else {
+            System.out.println("❌ Failed to clean database");
+        }
+
+        System.out.println("========================================\n");
+    }
+
+    // ========== UTILITY METHODS ==========
 
     /**
      * Prints usage information for the application.
@@ -283,6 +331,10 @@ public class App {
         System.out.println("  server [--port N]");
         System.out.println("    Starts TCP query server (Phase 3 - Coming Soon)");
         System.out.println("    Example: mvn exec:java -Dexec.args=\"server --port 9090\"");
+        System.out.println();
+        System.out.println("  clean");
+        System.out.println("    Clears all files from the database");
+        System.out.println("    Example: mvn exec:java -Dexec.args=\"clean\"");
         System.out.println();
         System.out.println("  help");
         System.out.println("    Shows this help message");
